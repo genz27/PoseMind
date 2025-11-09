@@ -1,0 +1,7 @@
+Flask==3.0.0
+openai==1.54.3
+requests==2.31.0
+Pillow==10.1.0
+Werkzeug==3.0.1
+gunicorn==21.2.0
+
