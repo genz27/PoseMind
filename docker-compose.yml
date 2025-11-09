@@ -13,12 +13,12 @@ services:
       - PORT=5000
       
       # AI Model API (Scene Analysis & Pose Generation)
-      - AI_MODELSCOPE_API_KEY=${AI_MODELSCOPE_API_KEY:}
+      - AI_MODELSCOPE_API_KEY=${AI_MODELSCOPE_API_KEY:-test}
       - AI_MODELSCOPE_BASE_URL=${AI_MODELSCOPE_BASE_URL:-https://api-inference.modelscope.cn/v1}
       - VISION_MODEL=${VISION_MODEL:-Qwen/Qwen3-VL-235B-A22B-Instruct}
       
       # Image Generation API
-      - IMAGE_MODELSCOPE_API_KEY=${IMAGE_MODELSCOPE_API_KEY:}
+      - IMAGE_MODELSCOPE_API_KEY=${IMAGE_MODELSCOPE_API_KEY:-test}
       - IMAGE_MODELSCOPE_BASE_URL=${IMAGE_MODELSCOPE_BASE_URL:-https://api-inference.modelscope.cn/}
       - IMAGE_GENERATION_MODEL=${IMAGE_GENERATION_MODEL:-Qwen/Qwen-Image}
       
@@ -37,4 +37,5 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
 
