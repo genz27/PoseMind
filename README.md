@@ -5,594 +5,260 @@
 ![Version](https://img.shields.io/badge/version-4.0-ff2442?style=for-the-badge)
 ![Python](https://img.shields.io/badge/python-3.8+-blue?style=for-the-badge&logo=python)
 ![Flask](https://img.shields.io/badge/flask-3.0.0-green?style=for-the-badge&logo=flask)
-![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)
+![License](https://img.shields.io/badge/license-Apache--2.0-green?style=for-the-badge)
 ![AI Powered](https://img.shields.io/badge/AI-Powered-ff6b9d?style=for-the-badge)
 
-**AI-powered photography pose generation system**
+**AI智能姿势生成系统，让摄影更简单**
 
-*Intelligent scene recognition • Automatic pose generation • Professional guidance*
+*智能场景识别 • 自动姿势生成 • 专业指导*
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Contributing](#-contributing)
+[English](README_EN.md) • [功能特性](#-功能特性) • [快速开始](#-快速开始) • [部署](#-部署)
 
 </div>
 
 ---
 
-## 📖 About
+## 📖 关于
 
-PoseMind is an AI-driven photography pose recommendation system that automatically analyzes scene context and generates personalized pose suggestions. Using advanced vision models and image generation AI, it creates professional pose guidance illustrations tailored to your photos.
+PoseMind 是一个AI驱动的摄影姿势推荐系统，能够自动分析场景并生成个性化的姿势建议。使用先进的视觉模型和图像生成AI，为您的照片创建专业的姿势指导图。
 
-### Key Highlights
+### 核心特性
 
-- 🧠 **AI Scene Analysis** - Automatically recognizes environment, lighting, and atmosphere
-- 🎯 **Intelligent Pose Generation** - Creates unique poses based on scene context
-- 🎨 **Line Art Illustrations** - Generates clear pose guidance diagrams
-- 🚀 **Fully Automated** - Only requires gender selection, everything else is AI-powered
-- 🌸 **Beautiful UI** - Modern, responsive design with pink gradient theme
-
----
-
-## ✨ Features
-
-### 🧠 AI-Powered Scene Recognition
-- Automatic environment analysis (indoor/outdoor/urban/nature)
-- Atmosphere detection (casual/formal/romantic/energetic)
-- Lighting assessment (natural/artificial/backlight)
-- Context-aware pose suggestions
-
-### 🎯 Intelligent Pose Generation
-- **No fixed pose lists** - AI generates poses in real-time
-- Context-adaptive suggestions based on scene analysis
-- Unique poses every time
-- Unlimited creative possibilities
-
-### 🎨 Professional Guidance
-- Generates 4 diverse pose illustrations per request
-- Clear line art diagrams showing body positioning
-- Detailed pose descriptions and categories
-- Download functionality for all generated images
-
-### 🚀 Fully Automated Workflow
-- **User only selects gender** - AI handles everything else
-- No manual style or scene selection needed
-- 2-3 minutes to get personalized poses
-- One-click regeneration
-
-### 🌸 Modern UI/UX
-- Pink gradient theme
-- Responsive design (desktop/tablet/mobile)
-- Smooth animations and transitions
-- Intuitive user interface
+- 🧠 **AI场景分析** - 自动识别环境、光线和氛围
+- 🎯 **智能姿势生成** - 根据场景实时生成独特姿势
+- 🎨 **线条图指导** - 生成清晰的姿势示意图
+- 🚀 **全自动化** - 只需选择性别，其他全部AI完成
+- 🌸 **精美UI** - 现代化响应式设计
 
 ---
 
-## 🚀 Quick Start
+## ✨ 功能特性
 
-### Prerequisites
+### 🧠 AI智能场景识别
+- 自动环境分析（室内/户外/城市/自然）
+- 氛围检测（休闲/正式/浪漫/活力）
+- 光线评估（自然光/人工光/逆光）
 
-- Python 3.8 or higher
-- ModelScope API key ([Get one here](https://modelscope.cn/))
+### 🎯 智能姿势生成
+- **无固定姿势列表** - AI实时生成姿势
+- 基于场景分析的适应性建议
+- 每次生成都独一无二
 
-### Installation
+### 🎨 专业指导
+- 每次生成4个多样化姿势示意图
+- 清晰展示身体姿势的线条图
+- 详细的姿势描述和分类
+- 支持下载所有生成图片
 
-1. **Clone the repository**
+---
+
+## 🚀 快速开始
+
+### 前置要求
+
+- Python 3.8+
+- ModelScope API密钥 ([获取密钥](https://modelscope.cn/))
+
+### 安装步骤
+
+1. **克隆仓库**
 ```bash
-git clone https://github.com/yourusername/PoseMind.git
+git clone https://github.com/genz27/PoseMind.git
 cd PoseMind
 ```
 
-2. **Install dependencies**
+2. **安装依赖**
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Configure API keys**
+3. **配置API密钥**
 
-Set environment variables (recommended):
+设置环境变量（推荐）：
 ```bash
-# AI Model API (for scene analysis and pose generation)
 export AI_MODELSCOPE_API_KEY="your-ai-api-key"
-export AI_MODELSCOPE_BASE_URL="https://api-inference.modelscope.cn/v1"
-
-# Image Generation API (for pose illustrations)
 export IMAGE_MODELSCOPE_API_KEY="your-image-api-key"
-export IMAGE_MODELSCOPE_BASE_URL="https://api-inference.modelscope.cn/"
 ```
 
-Or edit `config.py`:
+或编辑 `config.py`：
 ```python
 AI_MODELSCOPE_API_KEY = 'your-ai-api-key'
 IMAGE_MODELSCOPE_API_KEY = 'your-image-api-key'
 ```
 
-4. **Run the application**
+4. **运行应用**
 
-**Option 1: Docker (Recommended)**
+**Docker（推荐）:**
 ```bash
-# Build and run with Docker Compose
 docker-compose up -d
-
-# Or build manually
-docker build -t posemind:latest .
-docker run -d -p 5000:5000 \
-  -e AI_MODELSCOPE_API_KEY="your-key" \
-  -e IMAGE_MODELSCOPE_API_KEY="your-key" \
-  posemind:latest
 ```
 
-**Option 2: Development mode**
+**开发模式:**
 ```bash
 python app.py
 ```
 
-**Option 3: Production mode (with Gunicorn)**
+**生产模式:**
 ```bash
 gunicorn -c gunicorn_config.py app:app
 ```
 
-5. **Access the web interface**
+5. **访问Web界面**
 
-Open your browser and visit: `http://localhost:5000`
+打开浏览器访问: `http://localhost:5000`
 
 ---
 
-## 📁 Project Structure
+## 📁 项目结构
 
 ```
 PoseMind/
-├── app.py                 # Flask application
-├── config.py              # Configuration file
-├── gunicorn_config.py     # Gunicorn production config
-├── requirements.txt       # Python dependencies
-├── Dockerfile             # Docker image configuration
-├── docker-compose.yml     # Docker Compose configuration
-├── .dockerignore          # Docker ignore file
-├── README.md              # This file
-├── LICENSE                # MIT License
+├── app.py                 # Flask应用
+├── config.py              # 配置文件
+├── gunicorn_config.py     # Gunicorn配置
+├── requirements.txt       # Python依赖
+├── Dockerfile             # Docker配置
+├── docker-compose.yml     # Docker Compose配置
 ├── templates/
-│   └── index.html         # Web interface
-├── uploads/               # Uploaded images
-└── results/               # Generated pose images
+│   └── index.html         # Web界面
+├── uploads/               # 上传图片
+└── results/               # 生成图片
 ```
 
 ---
 
-## 🔧 Configuration
+## 🔧 配置
 
-### Environment Variables
-
-All configuration can be set via environment variables (recommended for production):
+### 环境变量
 
 ```bash
-# Server Configuration
-PORT=5000
-
-# AI Model API (Scene Analysis & Pose Generation)
+# AI模型API
 AI_MODELSCOPE_API_KEY=your-ai-api-key
 AI_MODELSCOPE_BASE_URL=https://api-inference.modelscope.cn/v1
-VISION_MODEL=Qwen/Qwen3-VL-235B-A22B-Instruct
 
-# Image Generation API
+# 图片生成API
 IMAGE_MODELSCOPE_API_KEY=your-image-api-key
 IMAGE_MODELSCOPE_BASE_URL=https://api-inference.modelscope.cn/
-IMAGE_GENERATION_MODEL=Qwen/Qwen-Image
 
-# Timeout Settings
-IMAGE_GENERATION_TIMEOUT=150
-IMAGE_GENERATION_CHECK_INTERVAL=5
-API_REQUEST_TIMEOUT=30
-```
-
-### Config File
-
-Edit `config.py` for local development:
-
-```python
-# Number of poses to generate
-NUM_POSES_TO_GENERATE = 4
-
-# Model Configuration
-VISION_MODEL = 'Qwen/Qwen3-VL-235B-A22B-Instruct'
-IMAGE_GENERATION_MODEL = 'Qwen/Qwen-Image'
+# 服务器配置
+PORT=5000
 ```
 
 ---
 
-## 💻 Usage
+## 💻 使用方法
 
-### Web Interface
+### Web界面
 
-1. **Upload a photo** - Click or drag & drop an image
-2. **Select gender** - Choose "Female" or "Male"
-3. **Generate poses** - Click "Start Generation" button
-4. **View results** - See scene analysis and 4 pose illustrations
-5. **Download images** - Click download button on any pose card
-6. **Regenerate** - Click "Regenerate" button to get new poses
+1. 上传照片
+2. 选择性别（女生/男生）
+3. 点击"开始智能生成"
+4. 等待2-3分钟
+5. 查看结果并下载图片
 
-### API Usage
+### API使用
 
-#### Upload Image
+#### 上传图片
 ```bash
-curl -X POST http://localhost:5000/api/upload \
-  -F "image=@photo.jpg"
+curl -X POST http://localhost:5000/api/upload -F "image=@photo.jpg"
 ```
 
-#### Generate Poses
+#### 生成姿势
 ```bash
 curl -X POST http://localhost:5000/api/generate-poses \
   -H "Content-Type: application/json" \
-  -d '{
-    "image_filename": "photo.jpg",
-    "gender": "female"
-  }'
-```
-
-### Python Example
-```python
-import requests
-
-# Upload image
-with open('photo.jpg', 'rb') as f:
-    response = requests.post(
-        'http://localhost:5000/api/upload',
-        files={'image': f}
-    )
-    filename = response.json()['filename']
-
-# Generate poses
-response = requests.post(
-    'http://localhost:5000/api/generate-poses',
-    json={
-        'image_filename': filename,
-        'gender': 'female'
-    }
-)
-
-result = response.json()
-print(f"Scene: {result['scene_analysis']}")
-for pose in result['pose_variants']:
-    print(f"- {pose['name']}: {pose['description']}")
+  -d '{"image_filename": "photo.jpg", "gender": "female"}'
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## 🛠️ 技术栈
 
-### Backend
-- **Flask** - Web framework
-- **OpenAI API Client** - AI model integration
-- **Pillow** - Image processing
-- **Gunicorn** - Production WSGI server
-
-### AI Models (ModelScope)
-- **Qwen3-VL-235B-A22B-Instruct** - Vision model for scene analysis
-- **Qwen3-VL-235B-A22B-Instruct** - AI model for pose generation
-- **Qwen-Image** - Image generation model
-
-### Frontend
-- **HTML5 + CSS3** - Modern web standards
-- **Vanilla JavaScript** - No framework dependencies
-- **Responsive Design** - Mobile-first approach
+- **后端**: Flask, Gunicorn
+- **AI模型**: Qwen3-VL-235B-A22B-Instruct, Qwen-Image
+- **前端**: HTML5, CSS3, JavaScript
+- **部署**: Docker, Docker Compose
 
 ---
 
-## 📊 API Reference
+## 🚀 部署
 
-### POST /api/upload
+### Docker部署（推荐）
 
-Upload an image file.
-
-**Request:**
-- Content-Type: `multipart/form-data`
-- Body: `image` (file, max 16MB)
-
-**Response:**
-```json
-{
-  "status": "success",
-  "filename": "timestamp_hash.jpg"
-}
-```
-
-### POST /api/generate-poses
-
-Generate pose suggestions based on uploaded image.
-
-**Request:**
-```json
-{
-  "image_filename": "timestamp_hash.jpg",
-  "gender": "female"
-}
-```
-
-**Response:**
-```json
-{
-  "status": "success",
-  "scene_analysis": "Detailed scene analysis...",
-  "gender": "Female",
-  "pose_variants": [
-    {
-      "name": "Pose Name",
-      "description": "Detailed description",
-      "category": "Category",
-      "image": "pose_variant_1.jpg"
-    }
-  ]
-}
-```
-
-### GET /results/<filename>
-
-Download generated pose image.
-
----
-
-## 🚀 Deployment
-
-### Docker Deployment (Recommended)
-
-#### Prerequisites
-- Docker installed ([Get Docker](https://www.docker.com/get-started))
-- Docker Compose (optional, for easier deployment)
-
-#### Quick Start with Docker
-
-1. **Build the Docker image**
 ```bash
-docker build -t posemind:latest .
-```
-
-2. **Run the container**
-```bash
-docker run -d \
-  -p 5000:5000 \
-  -e AI_MODELSCOPE_API_KEY="your-ai-api-key" \
-  -e IMAGE_MODELSCOPE_API_KEY="your-image-api-key" \
-  -v $(pwd)/uploads:/app/uploads \
-  -v $(pwd)/results:/app/results \
-  --name posemind \
-  posemind:latest
-```
-
-3. **Access the application**
-```
-http://localhost:5000
-```
-
-#### Using Docker Compose (Recommended)
-
-1. **Create `.env` file** (optional)
-```env
-AI_MODELSCOPE_API_KEY=your-ai-api-key
-IMAGE_MODELSCOPE_API_KEY=your-image-api-key
-AI_MODELSCOPE_BASE_URL=https://api-inference.modelscope.cn/v1
-IMAGE_MODELSCOPE_BASE_URL=https://api-inference.modelscope.cn/
-```
-
-2. **Start with Docker Compose**
-```bash
+# 使用Docker Compose
 docker-compose up -d
-```
 
-3. **View logs**
-```bash
+# 查看日志
 docker-compose logs -f
-```
 
-4. **Stop the application**
-```bash
+# 停止服务
 docker-compose down
 ```
 
-#### Docker Commands
+### 生产环境
 
 ```bash
-# Build image
-docker build -t posemind:latest .
-
-# Run container
-docker run -d -p 5000:5000 --name posemind posemind:latest
-
-# View logs
-docker logs -f posemind
-
-# Stop container
-docker stop posemind
-
-# Start container
-docker start posemind
-
-# Remove container
-docker rm posemind
-
-# Remove image
-docker rmi posemind:latest
-```
-
-#### Docker Volume Management
-
-Persist uploads and results data:
-```bash
-docker run -d \
-  -p 5000:5000 \
-  -v $(pwd)/uploads:/app/uploads \
-  -v $(pwd)/results:/app/results \
-  posemind:latest
-```
-
-#### Environment Variables
-
-Set environment variables in Docker:
-```bash
-docker run -d \
-  -p 5000:5000 \
-  -e AI_MODELSCOPE_API_KEY="your-key" \
-  -e IMAGE_MODELSCOPE_API_KEY="your-key" \
-  -e PORT=5000 \
-  posemind:latest
-```
-
-Or use `.env` file with Docker Compose:
-```yaml
-environment:
-  - AI_MODELSCOPE_API_KEY=${AI_MODELSCOPE_API_KEY}
-  - IMAGE_MODELSCOPE_API_KEY=${IMAGE_MODELSCOPE_API_KEY}
-```
-
-### Production with Gunicorn
-
-#### Direct Deployment
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run with Gunicorn
+# 使用Gunicorn
 gunicorn -c gunicorn_config.py app:app
 ```
 
-#### Systemd Service (Linux)
+### 云平台部署
 
-Create `/etc/systemd/system/posemind.service`:
-```ini
-[Unit]
-Description=PoseMind Application
-After=network.target
-
-[Service]
-User=www-data
-WorkingDirectory=/path/to/PoseMind
-Environment="PATH=/path/to/venv/bin"
-ExecStart=/path/to/venv/bin/gunicorn -c gunicorn_config.py app:app
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start:
-```bash
-sudo systemctl enable posemind
-sudo systemctl start posemind
-```
-
-### Cloud Deployment
-
-#### AWS EC2 / Google Cloud / Azure
-
-1. **Launch a VM instance**
-2. **Install Docker**
-3. **Clone repository**
-4. **Configure environment variables**
-5. **Run with Docker Compose**
-
-#### Heroku
-
-```bash
-# Create Procfile
-echo "web: gunicorn -c gunicorn_config.py app:app" > Procfile
-
-# Deploy
-git push heroku main
-```
-
-#### Railway / Render / Fly.io
-
-1. **Connect GitHub repository**
-2. **Set environment variables**
-3. **Deploy automatically**
-
-### Environment Variables
-
-Set all required environment variables in your deployment environment:
-
-```bash
-# Server Configuration
-PORT=5000
-
-# AI Model API
-AI_MODELSCOPE_API_KEY=your-ai-api-key
-AI_MODELSCOPE_BASE_URL=https://api-inference.modelscope.cn/v1
-VISION_MODEL=Qwen/Qwen3-VL-235B-A22B-Instruct
-
-# Image Generation API
-IMAGE_MODELSCOPE_API_KEY=your-image-api-key
-IMAGE_MODELSCOPE_BASE_URL=https://api-inference.modelscope.cn/
-IMAGE_GENERATION_MODEL=Qwen/Qwen-Image
-
-# Timeout Settings
-IMAGE_GENERATION_TIMEOUT=150
-IMAGE_GENERATION_CHECK_INTERVAL=5
-API_REQUEST_TIMEOUT=30
-```
+支持部署到 AWS EC2、Google Cloud、Azure、Heroku、Railway、Render 等平台。
 
 ---
 
-## 🤝 Contributing
+## 📊 API参考
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### POST /api/upload
+上传图片文件
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### POST /api/generate-poses
+生成姿势建议
 
-### Development Setup
-
-```bash
-# Clone repository
-git clone https://github.com/yourusername/PoseMind.git
-cd PoseMind
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run development server
-python app.py
-```
+### GET /results/<filename>
+下载生成的姿势图片
 
 ---
 
-## 📝 License
+## 🤝 贡献
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+欢迎贡献！请提交 Pull Request。
 
----
-
-## 🙏 Acknowledgments
-
-- **ModelScope** - For providing powerful AI models
-- **Qwen Series Models** - For vision understanding and image generation
-- **Flask** - For the excellent web framework
-- **All Contributors** - For their valuable contributions
+1. Fork 仓库
+2. 创建功能分支
+3. 提交更改
+4. 推送到分支
+5. 打开 Pull Request
 
 ---
 
-## 📧 Support
+## 📝 许可证
 
-- 🐛 **Bug Reports**: [Open an issue](https://github.com/yourusername/PoseMind/issues)
-- 💡 **Feature Requests**: [Open an issue](https://github.com/yourusername/PoseMind/issues)
-- 📖 **Documentation**: Check the [Wiki](https://github.com/yourusername/PoseMind/wiki)
+本项目采用 Apache-2.0 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
 ---
 
-## ⭐ Star History
+## 🙏 致谢
 
-If you find this project helpful, please consider giving it a star! ⭐
+- **ModelScope** - 提供强大的AI模型
+- **Qwen系列模型** - 视觉理解和图像生成
+- **Flask** - 优秀的Web框架
+
+---
+
+## 📧 支持
+
+- 🐛 **Bug报告**: [提交Issue](https://github.com/genz27/PoseMind/issues)
+- 💡 **功能请求**: [提交Issue](https://github.com/genz27/PoseMind/issues)
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by the PoseMind Team**
+**由PoseMind团队用 ❤️ 制作**
 
-[⬆ Back to Top](#posemind)
+[⬆ 返回顶部](#posemind)
 
 </div>
