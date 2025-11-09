@@ -18,6 +18,24 @@
 
 ---
 
+## 📸 Project Showcase
+
+<div align="center">
+
+### Upload Interface
+![Upload Interface](templates/e0de9b5a-1324-4021-9bbd-fcb8b233ebaa.png)
+
+*Clean and beautiful upload interface with drag-and-drop support*
+
+### Generation Results
+![Generation Results](templates/1b8f42b4ed405df99a488846f86dd93c.png)
+
+*AI Scene Analysis + Intelligent Pose Generation + Line Art Guidance*
+
+</div>
+
+---
+
 ## 📖 About
 
 PoseMind is an AI-driven photography pose recommendation system that automatically analyzes scene context and generates personalized pose suggestions. Using advanced vision models and image generation AI, it creates professional pose guidance illustrations.
@@ -49,6 +67,14 @@ PoseMind is an AI-driven photography pose recommendation system that automatical
 - Clear line art diagrams showing body positioning
 - Detailed pose descriptions and categories
 - Download functionality for all generated images
+
+<div align="center">
+
+![Feature Showcase](templates/1b8f42b4ed405df99a488846f86dd93c.png)
+
+*AI intelligently analyzes scenes and generates personalized pose guidance diagrams*
+
+</div>
 
 ---
 
