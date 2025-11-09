@@ -24,6 +24,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
+# Remove any Python cache files
+RUN find . -type d -name __pycache__ -exec rm -r {} + 2>/dev/null || true && \
+    find . -type f -name "*.pyc" -delete && \
+    find . -type f -name "*.pyo" -delete
+
 # Create necessary directories
 RUN mkdir -p uploads results && \
     chmod -R 755 uploads results
