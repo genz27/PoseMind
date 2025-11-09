@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, render_template, send_from_directory
 from werkzeug.utils import secure_filename
 import os
 import base64
-from openai import OpenAI
 import requests
 import time
 import json
@@ -20,11 +19,8 @@ app.config['MAX_CONTENT_LENGTH'] = config.MAX_CONTENT_LENGTH
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['RESULT_FOLDER'], exist_ok=True)
 
-# Initialize OpenAI client for vision model (AI model)
-client = OpenAI(
-    base_url=config.AI_MODELSCOPE_BASE_URL,
-    api_key=config.AI_MODELSCOPE_API_KEY,
-)
+# Note: We use direct API calls with requests instead of OpenAI client library
+# to avoid version compatibility issues with the OpenAI library
 
 
 def allowed_file(filename):
@@ -114,25 +110,43 @@ def analyze_image_scene(image_path):
 
 请用简洁的语言描述，重点突出场景特征。"""
 
-        response = client.chat.completions.create(
-            model=config.VISION_MODEL,
-            messages=[{
-                'role': 'user',
-                'content': [
-                    {'type': 'text', 'text': prompt},
-                    {'type': 'image_url', 'image_url': {'url': image_url}},
+        # Use direct API call to avoid OpenAI client library version issues
+        api_url = f"{config.AI_MODELSCOPE_BASE_URL}/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {config.AI_MODELSCOPE_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        
+        payload = {
+            "model": config.VISION_MODEL,
+            "messages": [{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": image_url}},
                 ],
             }],
-            stream=False,
-            max_tokens=300,
-        )
+            "stream": False,
+            "max_tokens": 300,
+        }
         
-        scene_info = response.choices[0].message.content
+        response = requests.post(
+            api_url,
+            headers=headers,
+            json=payload,
+            timeout=config.API_REQUEST_TIMEOUT
+        )
+        response.raise_for_status()
+        
+        result = response.json()
+        scene_info = result["choices"][0]["message"]["content"]
         print(f"Scene analysis: {scene_info}")
         return scene_info
             
     except Exception as e:
         print(f"Scene analysis error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return "户外自然场景"
 
 
@@ -442,17 +456,33 @@ def get_diverse_poses_for_scene(scene_context, gender='female'):
 
 请直接返回JSON数组，不要有其他文字。"""
 
-        response = client.chat.completions.create(
-            model=config.VISION_MODEL,
-            messages=[{
-                'role': 'user',
-                'content': prompt
-            }],
-            stream=False,
-            max_tokens=1000,
-        )
+        # Use direct API call to avoid OpenAI client library version issues
+        api_url = f"{config.AI_MODELSCOPE_BASE_URL}/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {config.AI_MODELSCOPE_API_KEY}",
+            "Content-Type": "application/json",
+        }
         
-        ai_response = response.choices[0].message.content.strip()
+        payload = {
+            "model": config.VISION_MODEL,
+            "messages": [{
+                "role": "user",
+                "content": prompt
+            }],
+            "stream": False,
+            "max_tokens": 1000,
+        }
+        
+        response = requests.post(
+            api_url,
+            headers=headers,
+            json=payload,
+            timeout=config.API_REQUEST_TIMEOUT
+        )
+        response.raise_for_status()
+        
+        result = response.json()
+        ai_response = result["choices"][0]["message"]["content"].strip()
         print(f"AI pose suggestions: {ai_response}")
         
         # Parse JSON response
