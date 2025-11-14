@@ -936,25 +936,57 @@
                 data.pose_variants.forEach(pose => {
                     const poseCard = document.createElement('div');
                     poseCard.className = 'pose-card';
-                    
-                    // Add category badge if available
-                    const categoryBadge = pose.category ? 
-                        `<span style="display:inline-block;background:#FFE8EC;color:#FF2442;padding:4px 10px;border-radius:10px;font-size:0.75em;margin-bottom:8px;">${pose.category}</span>` : '';
-                    
-                    poseCard.innerHTML = `
-                        <img src="/results/${pose.image}" class="pose-image" alt="${pose.name}">
-                        <div class="pose-info">
-                            ${categoryBadge}
-                            <div class="pose-name">${pose.name}</div>
-                            <div class="pose-desc">${pose.description}</div>
-                            <div class="pose-actions">
-                                <button class="download-btn" onclick="downloadPoseImage('${pose.image}', '${pose.name}')">
-                                    <span class="download-icon">⬇</span>
-                                    <span>下载图片</span>
-                                </button>
-                            </div>
-                        </div>
-                    `;
+
+                    const img = document.createElement('img');
+                    img.src = `/results/${pose.image}`;
+                    img.className = 'pose-image';
+                    img.alt = pose.name || 'pose';
+
+                    const info = document.createElement('div');
+                    info.className = 'pose-info';
+
+                    if (pose.category) {
+                        const badge = document.createElement('span');
+                        badge.style.display = 'inline-block';
+                        badge.style.background = '#FFE8EC';
+                        badge.style.color = '#FF2442';
+                        badge.style.padding = '4px 10px';
+                        badge.style.borderRadius = '10px';
+                        badge.style.fontSize = '0.75em';
+                        badge.style.marginBottom = '8px';
+                        badge.textContent = pose.category;
+                        info.appendChild(badge);
+                    }
+
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'pose-name';
+                    nameDiv.textContent = pose.name || '';
+
+                    const descDiv = document.createElement('div');
+                    descDiv.className = 'pose-desc';
+                    descDiv.textContent = pose.description || '';
+
+                    const actions = document.createElement('div');
+                    actions.className = 'pose-actions';
+
+                    const btn = document.createElement('button');
+                    btn.className = 'download-btn';
+                    btn.addEventListener('click', () => downloadPoseImage(pose.image, pose.name));
+                    const icon = document.createElement('span');
+                    icon.className = 'download-icon';
+                    icon.textContent = '⬇';
+                    const label = document.createElement('span');
+                    label.textContent = '下载图片';
+                    btn.appendChild(icon);
+                    btn.appendChild(label);
+
+                    actions.appendChild(btn);
+                    info.appendChild(nameDiv);
+                    info.appendChild(descDiv);
+                    info.appendChild(actions);
+
+                    poseCard.appendChild(img);
+                    poseCard.appendChild(info);
                     poseGrid.appendChild(poseCard);
                 });
 

@@ -3,6 +3,7 @@ Configuration file for PoseMind application
 """
 
 import os
+import secrets
 
 
 # File Upload Configuration
@@ -11,10 +12,12 @@ RESULT_FOLDER = 'results'
 MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
-# Flask Configuration
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'false').lower() in ('1', 'true', 'yes', 'on')
 HOST = '0.0.0.0'
-SECRET_KEY = os.getenv('SECRET_KEY', 'posemind-secret-key')
+SECRET_KEY = os.getenv('SECRET_KEY') or secrets.token_hex(32)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'false').lower() in ('1', 'true', 'yes', 'on')
 
 # Pose Generation Settings
 POSE_STYLES = {

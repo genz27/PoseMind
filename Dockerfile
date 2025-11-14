@@ -33,6 +33,9 @@ RUN find . -type d -name __pycache__ -exec rm -r {} + 2>/dev/null || true && \
 RUN mkdir -p uploads results && \
     chmod -R 755 uploads results
 
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+
 # Expose port
 EXPOSE 5000
 

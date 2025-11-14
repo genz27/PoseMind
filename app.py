@@ -7,13 +7,16 @@ import time
 import json
 from PIL import Image, ImageDraw
 from io import BytesIO
-import re
+import logging
 import config
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
 app.config['RESULT_FOLDER'] = config.RESULT_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = config.MAX_CONTENT_LENGTH
+app.config['SESSION_COOKIE_HTTPONLY'] = config.SESSION_COOKIE_HTTPONLY
+app.config['SESSION_COOKIE_SAMESITE'] = config.SESSION_COOKIE_SAMESITE
+app.config['SESSION_COOKIE_SECURE'] = config.SESSION_COOKIE_SECURE
 app.secret_key = config.SECRET_KEY
 
 # Create necessary directories
@@ -136,13 +139,11 @@ def analyze_image_scene(image_path):
         
         result = response.json()
         scene_info = result["choices"][0]["message"]["content"]
-        print(f"Scene analysis: {scene_info}")
+        logging.info(f"Scene analysis: {scene_info}")
         return scene_info
             
     except Exception as e:
-        print(f"Scene analysis error: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logging.exception(f"Scene analysis error: {str(e)}")
         return "户外自然场景"
 
 
@@ -176,11 +177,11 @@ def compress_image_for_api(image_path, max_size_kb=300):
             img.save(buffer, format='JPEG', quality=quality, optimize=True)
         
         final_size = buffer.tell() / 1024
-        print(f"Compressed image: {final_size:.2f} KB (quality: {quality})")
+        logging.info(f"Compressed image: {final_size:.2f} KB (quality: {quality})")
         
         return base64.b64encode(buffer.getvalue()).decode('utf-8')
     except Exception as e:
-        print(f"Image compression error: {str(e)}")
+        logging.error(f"Image compression error: {str(e)}")
         # Fallback: read original file
         with open(image_path, 'rb') as f:
             return base64.b64encode(f.read()).decode('utf-8')
@@ -199,8 +200,8 @@ def generate_pose_variant_from_original(image_path, pose_description, scene_cont
         
         illustration_prompt = config.ILLUSTRATION_PROMPT_TEMPLATE.format(gender=gender_text) + f" 姿势：{pose_description}"
         
-        print(f"生成姿势指导图 {index}: {pose_description[:50]}...")
-        print(f"Prompt: {illustration_prompt[:100]}...")
+        logging.info(f"生成姿势指导图 {index}: {pose_description[:50]}...")
+        logging.info(f"Prompt: {illustration_prompt[:100]}...")
         
         # Prepare request payload - 使用Qwen-Image生成
         payload = {
@@ -210,8 +211,8 @@ def generate_pose_variant_from_original(image_path, pose_description, scene_cont
             "size": "1024x1024"
         }
         
-        print(f"Submitting image generation request {index}...")
-        print(f"Using model: {config.IMAGE_GENERATION_MODEL}")
+        logging.info(f"Submitting image generation request {index}...")
+        logging.info(f"Using model: {config.IMAGE_GENERATION_MODEL}")
         
         # Submit async image generation task
         response = requests.post(
@@ -222,27 +223,27 @@ def generate_pose_variant_from_original(image_path, pose_description, scene_cont
         )
         
         # Log response for debugging
-        print(f"Response status code: {response.status_code}")
+        logging.info(f"Response status code: {response.status_code}")
         if response.status_code != 200:
-            print(f"Response body: {response.text}")
+            logging.error(f"Response body: {response.text}")
             response.raise_for_status()
         
         result_data = response.json()
-        print(f"API Response: {result_data}")
+        logging.info(f"API Response: {result_data}")
         
         task_id = result_data.get("task_id")
         if not task_id:
-            print(f"No task_id in response: {result_data}")
+            logging.error(f"No task_id in response: {result_data}")
             return None
         
-        print(f"Task {index} submitted with ID: {task_id}")
+        logging.info(f"Task {index} submitted with ID: {task_id}")
         
         # Poll for completion
         max_attempts = config.IMAGE_GENERATION_TIMEOUT // config.IMAGE_GENERATION_CHECK_INTERVAL
         for attempt in range(max_attempts):
             time.sleep(config.IMAGE_GENERATION_CHECK_INTERVAL)
             
-            print(f"Checking task {index} status (attempt {attempt + 1}/{max_attempts})...")
+            logging.info(f"Checking task {index} status (attempt {attempt + 1}/{max_attempts})...")
             
             result = requests.get(
                 f"{base_url}v1/tasks/{task_id}",
@@ -253,16 +254,16 @@ def generate_pose_variant_from_original(image_path, pose_description, scene_cont
             data = result.json()
             
             task_status = data.get("task_status", "UNKNOWN")
-            print(f"Task {index} status: {task_status}")
+            logging.info(f"Task {index} status: {task_status}")
             
             if task_status == "SUCCEED":
                 output_images = data.get("output_images", [])
                 if not output_images:
-                    print(f"No output images in response: {data}")
+                    logging.error(f"No output images in response: {data}")
                     return None
                 
                 image_url = output_images[0]
-                print(f"Downloading generated image from: {image_url}")
+                logging.info(f"Downloading generated image from: {image_url}")
                 
                 img_response = requests.get(image_url, timeout=config.API_REQUEST_TIMEOUT)
                 img_response.raise_for_status()
@@ -283,32 +284,30 @@ def generate_pose_variant_from_original(image_path, pose_description, scene_cont
                     image_with_lines = image_with_lines.convert('RGB')
                 image_with_lines.save(filepath, quality=90)
                 
-                print(f"Successfully generated pose variant {index} with composition lines: {filename}")
+                logging.info(f"Successfully generated pose variant {index} with composition lines: {filename}")
                 return filename
                 
             elif task_status == "FAILED":
                 error_msg = data.get("error", "Unknown error")
-                print(f"Task {index} failed: {error_msg}")
+                logging.error(f"Task {index} failed: {error_msg}")
                 return None
             elif task_status in ["PENDING", "RUNNING"]:
                 continue
             else:
-                print(f"Unexpected task status: {task_status}")
+                logging.error(f"Unexpected task status: {task_status}")
                 continue
         
-        print(f"Task {index} timed out after {max_attempts} attempts")
+        logging.error(f"Task {index} timed out after {max_attempts} attempts")
         return None
         
     except requests.exceptions.HTTPError as e:
-        print(f"HTTP Error for pose variant {index}: {str(e)}")
+        logging.error(f"HTTP Error for pose variant {index}: {str(e)}")
         if e.response is not None:
-            print(f"Response status: {e.response.status_code}")
-            print(f"Response body: {e.response.text}")
+            logging.error(f"Response status: {e.response.status_code}")
+            logging.error(f"Response body: {e.response.text}")
         return None
     except Exception as e:
-        print(f"Pose variant generation error {index}: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logging.exception(f"Pose variant generation error {index}: {str(e)}")
         return None
 
 
@@ -339,6 +338,8 @@ def generate_poses():
     
     if not image_filename:
         return jsonify({'error': '请先上传图片'}), 400
+    if not config.AI_MODELSCOPE_API_KEY or not config.IMAGE_MODELSCOPE_API_KEY:
+        return jsonify({'error': '缺少API密钥，请配置AI与图片生成服务密钥'}), 500
     
     image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
     if not os.path.exists(image_path):
@@ -348,17 +349,17 @@ def generate_poses():
         gender_name = config.GENDER_OPTIONS.get(gender, '女生')
         
         # AI analyzes the scene to understand context
-        print("Analyzing scene...")
+        logging.info("Analyzing scene...")
         scene_context = analyze_image_scene(image_path)
         
         # Get diverse poses based on scene analysis and gender
-        print("Selecting diverse poses...")
+        logging.info("Selecting diverse poses...")
         pose_descriptions = get_diverse_poses_for_scene(scene_context, gender)
         
         # Generate pose variants by editing original image
         pose_variants = []
         for idx, pose_desc in enumerate(pose_descriptions[:config.NUM_POSES_TO_GENERATE], 1):
-            print(f"Generating pose variant {idx}/{config.NUM_POSES_TO_GENERATE}: {pose_desc['name']}")
+            logging.info(f"Generating pose variant {idx}/{config.NUM_POSES_TO_GENERATE}: {pose_desc['name']}")
             
             variant_filename = generate_pose_variant_from_original(
                 image_path, 
@@ -376,7 +377,7 @@ def generate_poses():
                     'image': variant_filename
                 })
             else:
-                print(f"Failed to generate pose variant {idx}")
+                logging.error(f"Failed to generate pose variant {idx}")
         
         result = {
             'status': 'success',
@@ -411,6 +412,11 @@ def upload():
         filename = f"{timestamp}_{filename}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
+        try:
+            Image.open(filepath).verify()
+        except Exception:
+            os.remove(filepath)
+            return jsonify({'error': '文件内容无效或已损坏'}), 400
         
         return jsonify({
             'status': 'success',
@@ -459,7 +465,7 @@ def get_diverse_poses_for_scene(scene_context, gender='female'):
         
         result = response.json()
         ai_response = result["choices"][0]["message"]["content"].strip()
-        print(f"AI pose suggestions: {ai_response}")
+        logging.info(f"AI pose suggestions: {ai_response}")
         
         # Parse JSON response
         import json
@@ -478,7 +484,7 @@ def get_diverse_poses_for_scene(scene_context, gender='female'):
         return poses[:config.NUM_POSES_TO_GENERATE]
         
     except Exception as e:
-        print(f"AI pose generation error: {str(e)}")
+        logging.error(f"AI pose generation error: {str(e)}")
         # Fallback: simple default poses
         gender_suffix = "女生" if gender == "female" else "男生"
         return [
@@ -504,6 +510,7 @@ def result_file(filename):
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
     print("\n" + "="*60)
     print("🎨 PoseMind - AI Photography Pose Recommendation System")
     print("="*60)
