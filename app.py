@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template, send_from_directory, session
 from werkzeug.utils import secure_filename
 import os
 import base64
@@ -14,6 +14,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
 app.config['RESULT_FOLDER'] = config.RESULT_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = config.MAX_CONTENT_LENGTH
+app.secret_key = config.SECRET_KEY
 
 # Create necessary directories
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -96,19 +97,11 @@ def add_composition_lines(image, line_type='rule_of_thirds', line_color=(255, 36
 def analyze_image_scene(image_path):
     """Analyze image to understand scene, location, and environment"""
     try:
-        with open(image_path, 'rb') as img_file:
-            img_data = base64.b64encode(img_file.read()).decode('utf-8')
-            image_url = f"data:image/jpeg;base64,{img_data}"
+        img_data = compress_image_for_api(image_path)
+        image_url = f"data:image/jpeg;base64,{img_data}"
         
-        # Comprehensive scene analysis
-        prompt = """请详细分析这张照片的场景和环境，包括：
-1. 拍摄地点类型（室内/户外/城市/自然/建筑等）
-2. 具体场景描述（咖啡馆/公园/街道/海边/山景/办公室/家中等）
-3. 环境氛围（休闲/正式/浪漫/活力/艺术等）
-4. 光线特点（自然光/人工光/逆光/柔光等）
-5. 适合的拍摄风格建议
-
-请用简洁的语言描述，重点突出场景特征。"""
+        system_prompt = config.SCENE_ANALYSIS_SYSTEM_PROMPT
+        prompt = config.SCENE_ANALYSIS_USER_PROMPT
 
         # Use direct API call to avoid OpenAI client library version issues
         api_url = f"{config.AI_MODELSCOPE_BASE_URL}/chat/completions"
@@ -119,13 +112,16 @@ def analyze_image_scene(image_path):
         
         payload = {
             "model": config.VISION_MODEL,
-            "messages": [{
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                    {"type": "image_url", "image_url": {"url": image_url}},
-                ],
-            }],
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": image_url}},
+                    ],
+                },
+            ],
             "stream": False,
             "max_tokens": 300,
         }
@@ -201,19 +197,7 @@ def generate_pose_variant_from_original(image_path, pose_description, scene_cont
         
         gender_text = "女生" if gender == "female" else "男生"
         
-        # 生成线条小人姿势指导图的提示词
-        # 添加安全约束，确保生成专业、健康、合适的姿势指导图
-        illustration_prompt = f"""简单的黑白线条图，{gender_text}人物姿势示意图：{pose_description}。
-风格要求：
-- 简洁的线条画风格
-- 黑白色调
-- 清晰展示姿势动作
-- 类似教学示意图
-- 白色背景
-- 火柴人或简笔画风格
-- 专业、健康、优雅的姿势
-- 适合摄影教学和姿势指导
-- 无不当内容，符合安全规范"""
+        illustration_prompt = config.ILLUSTRATION_PROMPT_TEMPLATE.format(gender=gender_text) + f" 姿势：{pose_description}"
         
         print(f"生成姿势指导图 {index}: {pose_description[:50]}...")
         print(f"Prompt: {illustration_prompt[:100]}...")
@@ -295,6 +279,8 @@ def generate_pose_variant_from_original(image_path, pose_description, scene_cont
                 
                 filename = f"pose_variant_{index}_{int(time.time())}.jpg"
                 filepath = os.path.join(app.config['RESULT_FOLDER'], filename)
+                if image_with_lines.mode != 'RGB':
+                    image_with_lines = image_with_lines.convert('RGB')
                 image_with_lines.save(filepath, quality=90)
                 
                 print(f"Successfully generated pose variant {index} with composition lines: {filename}")
@@ -340,6 +326,16 @@ def generate_poses():
     
     image_filename = data.get('image_filename')
     gender = data.get('gender', 'female')
+    
+    today = time.strftime('%Y-%m-%d')
+    usage_date = session.get('usage_date')
+    if usage_date != today:
+        session['usage_date'] = today
+        session['usage_count'] = 0
+    count = session.get('usage_count', 0)
+    if count >= 20:
+        return jsonify({'error': '今日次数已用完（20/20），请明日再试'}), 429
+    session['usage_count'] = count + 1
     
     if not image_filename:
         return jsonify({'error': '请先上传图片'}), 400
@@ -428,33 +424,13 @@ def get_diverse_poses_for_scene(scene_context, gender='female'):
     """Use AI to intelligently generate diverse poses based on scene analysis"""
     try:
         gender_text = "女生" if gender == "female" else "男生"
-        
-        # AI-powered pose generation prompt with safety constraints
-        prompt = f"""根据以下场景分析，为{gender_text}智能生成{config.NUM_POSES_TO_GENERATE}个摄影姿势建议。
-
-场景信息：
-{scene_context}
-
-要求：
-1. 根据场景特点和氛围，生成适合该环境的姿势
-2. 确保姿势多样化，涵盖不同风格（经典、动态、坐姿、情感等）
-3. 考虑场景中的可用道具和环境特点
-4. 姿势要自然、可实现，适合{gender_text}
-5. 提供详细的姿势描述，包括身体、手臂、腿部、表情等细节
-6. **安全约束：所有姿势必须专业、健康、优雅，适合摄影教学和姿势指导，无不当内容，符合安全规范**
-
-请以JSON格式返回{config.NUM_POSES_TO_GENERATE}个姿势，每个姿势包含：
-- name: 姿势名称（简短有吸引力）
-- description: 详细的姿势描述（如何摆放身体、手臂、表情等，可以详细描述）
-- category: 姿势类别（经典/动态/坐姿/情感/艺术/互动/时尚/倚靠）
-
-格式示例：
-[
-  {{"name": "优雅侧身望", "description": "45度侧身站立，头部微微转向镜头，右手自然垂放，左手轻扶腰间，展现优雅的身体曲线", "category": "经典"}},
-  {{"name": "自然漫步", "description": "自然行走状态，右手轻拎包或撩发，左手自然摆动，表情轻松愉悦", "category": "动态"}}
-]
-
-请直接返回JSON数组，不要有其他文字。"""
+        system_prompt = config.POSE_SYSTEM_PROMPT
+        prompt = config.POSE_USER_PROMPT_TEMPLATE.format(
+            n=config.NUM_POSES_TO_GENERATE,
+            categories="|".join(config.POSE_CATEGORIES),
+            scene=scene_context,
+            gender=gender_text,
+        )
 
         # Use direct API call to avoid OpenAI client library version issues
         api_url = f"{config.AI_MODELSCOPE_BASE_URL}/chat/completions"
@@ -465,10 +441,10 @@ def get_diverse_poses_for_scene(scene_context, gender='female'):
         
         payload = {
             "model": config.VISION_MODEL,
-            "messages": [{
-                "role": "user",
-                "content": prompt
-            }],
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
             "stream": False,
             "max_tokens": 1000,
         }
@@ -495,7 +471,6 @@ def get_diverse_poses_for_scene(scene_context, gender='female'):
         
         poses = json.loads(ai_response)
         
-        # Add gender suffix to names
         for pose in poses:
             if gender_text not in pose['name']:
                 pose['name'] = f"{pose['name']} · {gender_text}"
