@@ -343,6 +343,35 @@
             display: block;
         }
 
+        .pose-image-box {
+            position: relative;
+            width: 100%;
+            min-height: 240px;
+            background: #F8F8F8;
+        }
+        .pose-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid #FFD1D8;
+            border-top-color: #FF2442;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .pose-info {
             padding: 15px;
         }
@@ -926,7 +955,7 @@
             });
         }
 
-        function displayPlan(data) {
+        async function displayPlan(data) {
             sceneAnalysis.textContent = data.scene_analysis || '';
             poseGrid.innerHTML = '';
             const gender = genderSelect.value;
@@ -936,10 +965,21 @@
                     const index = idx + 1;
                     const poseCard = document.createElement('div');
                     poseCard.className = 'pose-card';
+                    const imageBox = document.createElement('div');
+                    imageBox.className = 'pose-image-box';
                     const img = document.createElement('img');
                     img.className = 'pose-image';
                     img.alt = pose.name || 'pose';
                     img.id = `pose-image-${index}`;
+                    img.style.opacity = '0';
+                    const loading = document.createElement('div');
+                    loading.className = 'pose-loading';
+                    loading.id = `pose-loading-${index}`;
+                    const spinner = document.createElement('div');
+                    spinner.className = 'spinner';
+                    loading.appendChild(spinner);
+                    imageBox.appendChild(img);
+                    imageBox.appendChild(loading);
                     const info = document.createElement('div');
                     info.className = 'pose-info';
                     if (pose.category) {
@@ -977,10 +1017,9 @@
                     info.appendChild(nameDiv);
                     info.appendChild(descDiv);
                     info.appendChild(actions);
-                    poseCard.appendChild(img);
+                    poseCard.appendChild(imageBox);
                     poseCard.appendChild(info);
                     poseGrid.appendChild(poseCard);
-                    generateSinglePose(sceneContext, pose, index);
                 });
                 resultsSection.classList.add('active');
                 regenerateBtn.style.display = 'inline-block';
@@ -988,9 +1027,26 @@
                     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }, 100);
                 hideError();
+                generateWithConcurrency(sceneContext, data.poses, 1);
             } else {
                 showError('未能生成姿势，请重试');
             }
+        }
+
+        async function generateWithConcurrency(sceneContext, poses, limit = 1) {
+            let next = 0;
+            const run = async () => {
+                while (next < poses.length) {
+                    const i = next++;
+                    const pose = poses[i];
+                    const index = i + 1;
+                    await generateSinglePose(sceneContext, pose, index);
+                }
+            };
+            const count = Math.min(limit, poses.length);
+            const tasks = [];
+            for (let k = 0; k < count; k++) tasks.push(run());
+            await Promise.all(tasks);
         }
 
         async function generateSinglePose(sceneContext, pose, index) {
@@ -1009,7 +1065,14 @@
                 const data = await response.json();
                 if (data.status === 'success') {
                     const imgEl = document.getElementById(`pose-image-${index}`);
-                    if (imgEl) imgEl.src = `/results/${data.image}`;
+                    const loadingEl = document.getElementById(`pose-loading-${index}`);
+                    if (imgEl) {
+                        imgEl.onload = () => {
+                            imgEl.style.opacity = '1';
+                            if (loadingEl) loadingEl.style.display = 'none';
+                        };
+                        imgEl.src = `/results/${data.image}`;
+                    }
                     const btnEl = document.getElementById(`download-btn-${index}`);
                     if (btnEl) {
                         btnEl.disabled = false;

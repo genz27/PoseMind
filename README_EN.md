@@ -44,7 +44,7 @@ PoseMind is an AI-driven photography pose recommendation system that automatical
 
 - 🧠 **AI Scene Analysis** - Automatically recognizes environment, lighting, and atmosphere
 - 🎯 **Intelligent Pose Generation** - Creates unique poses based on scene context
-- 🎨 **Line Art Illustrations** - Generates clear pose guidance diagrams
+- 📷 **Xiaohongshu-style Photo Examples** - Real-photo aesthetics, clean and bright with soft natural light
 - 🚀 **Fully Automated** - Only requires gender selection, everything else is AI-powered
 - 🌸 **Beautiful UI** - Modern, responsive design
 
@@ -63,16 +63,17 @@ PoseMind is an AI-driven photography pose recommendation system that automatical
 - Unique poses every time
 
 ### 🎨 Professional Guidance
-- Generates 4 diverse pose illustrations per request
-- Clear line art diagrams showing body positioning
-- Detailed pose descriptions and categories
-- Download functionality for all generated images
+- Generates 4 Xiaohongshu-style photo examples per request
+- Natural soft lighting, lifestyle scenes; rule-of-thirds composition lines overlay
+- Detailed pose descriptions and categories tailored to scene context
+- Instant rendering and download with per-card loading animation
+- Frontend concurrency limited to 2; each image loads immediately when ready
 
 <div align="center">
 
 ![Feature Showcase](templates/1b8f42b4ed405df99a488846f86dd93c.png)
 
-*AI intelligently analyzes scenes and generates personalized pose guidance diagrams*
+*AI intelligently analyzes scenes and generates Xiaohongshu-style photo examples*
 
 </div>
 
@@ -242,6 +243,12 @@ Upload an image file
 
 ### POST /api/generate-poses
 Generate pose suggestions
+
+### POST /api/plan-poses
+Return pose plan and scene analysis without triggering image generation
+
+### POST /api/generate-pose-image
+Generate a single pose image per request (suitable for 2-concurrency)
 
 ### GET /results/<filename>
 Download generated pose image

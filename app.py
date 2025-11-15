@@ -198,7 +198,10 @@ def generate_pose_variant_from_original(image_path, pose_description, scene_cont
         
         gender_text = "女生" if gender == "female" else "男生"
         
-        illustration_prompt = config.ILLUSTRATION_PROMPT_TEMPLATE.format(gender=gender_text) + f" 姿势：{pose_description}"
+        illustration_prompt = config.ILLUSTRATION_PROMPT_TEMPLATE.format(
+            gender=gender_text,
+            pose=pose_description
+        )
         
         logging.info(f"生成姿势指导图 {index}: {pose_description[:50]}...")
         logging.info(f"Prompt: {illustration_prompt[:100]}...")
