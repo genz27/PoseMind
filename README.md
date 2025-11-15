@@ -165,10 +165,13 @@ AI_MODELSCOPE_BASE_URL=https://api-inference.modelscope.cn/v1
 
 # 图片生成API
 IMAGE_MODELSCOPE_API_KEY=your-image-api-key
-IMAGE_MODELSCOPE_BASE_URL=https://api-inference.modelscope.cn/
+IMAGE_MODELSCOPE_BASE_URL=https://api-inference.modelscope.cn/v1
 
 # 服务器配置
 PORT=5000
+
+# 连接时间
+IMAGE_GENERATION_TIMEOUT=150
 ```
 
 ---
@@ -295,3 +298,4 @@ gunicorn -c gunicorn_config.py app:app
 [⬆ 返回顶部](#posemind)
 
 </div>
+
