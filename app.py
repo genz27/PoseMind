@@ -318,6 +318,46 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/api/plan-poses', methods=['POST'])
+def plan_poses():
+    data = request.get_json()
+    image_filename = data.get('image_filename')
+    gender = data.get('gender', 'female')
+
+    today = time.strftime('%Y-%m-%d')
+    usage_date = session.get('usage_date')
+    if usage_date != today:
+        session['usage_date'] = today
+        session['usage_count'] = 0
+    count = session.get('usage_count', 0)
+    if count >= 20:
+        return jsonify({'error': '今日次数已用完（20/20），请明日再试'}), 429
+    session['usage_count'] = count + 1
+
+    if not image_filename:
+        return jsonify({'error': '请先上传图片'}), 400
+    if not config.AI_MODELSCOPE_API_KEY or not config.IMAGE_MODELSCOPE_API_KEY:
+        return jsonify({'error': '缺少API密钥，请配置AI与图片生成服务密钥'}), 500
+
+    image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
+    if not os.path.exists(image_path):
+        return jsonify({'error': '图片不存在'}), 404
+
+    try:
+        gender_name = config.GENDER_OPTIONS.get(gender, '女生')
+        scene_context = analyze_image_scene(image_path)
+        pose_descriptions = get_diverse_poses_for_scene(scene_context, gender)
+        result = {
+            'status': 'success',
+            'scene_analysis': scene_context,
+            'gender': gender_name,
+            'poses': pose_descriptions
+        }
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': f'生成失败: {str(e)}'}), 500
+
+
 @app.route('/api/generate-poses', methods=['POST'])
 def generate_poses():
     """Generate diverse pose variants based on AI scene analysis and gender"""
@@ -391,6 +431,38 @@ def generate_poses():
     except Exception as e:
         return jsonify({'error': f'生成失败: {str(e)}'}), 500
 
+
+@app.route('/api/generate-pose-image', methods=['POST'])
+def generate_pose_image():
+    data = request.get_json()
+    image_filename = data.get('image_filename')
+    gender = data.get('gender', 'female')
+    pose_description = data.get('pose_description')
+    scene_context = data.get('scene_context', '')
+    index = int(data.get('index', 1))
+
+    if not image_filename or not pose_description:
+        return jsonify({'error': '缺少必要参数'}), 400
+    if not config.IMAGE_MODELSCOPE_API_KEY:
+        return jsonify({'error': '缺少图片生成服务密钥'}), 500
+
+    image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
+    if not os.path.exists(image_path):
+        return jsonify({'error': '图片不存在'}), 404
+
+    try:
+        filename = generate_pose_variant_from_original(
+            image_path,
+            pose_description,
+            scene_context,
+            gender,
+            index
+        )
+        if not filename:
+            return jsonify({'error': '生成失败'}), 500
+        return jsonify({'status': 'success', 'image': filename})
+    except Exception as e:
+        return jsonify({'error': f'生成失败: {str(e)}'}), 500
 
 @app.route('/api/upload', methods=['POST'])
 def upload():

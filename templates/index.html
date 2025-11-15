@@ -883,7 +883,7 @@
             }
 
             try {
-                const response = await fetch('/api/generate-poses', {
+                const response = await fetch('/api/plan-poses', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -897,7 +897,7 @@
                 const data = await response.json();
 
                 if (data.status === 'success') {
-                    displayResults(data);
+                    displayPlan(data);
                     // Switch to split view
                     mainContent.classList.add('split-view');
                 } else {
@@ -926,25 +926,22 @@
             });
         }
 
-        function displayResults(data) {
-            // Display AI scene analysis
-            sceneAnalysis.textContent = data.scene_analysis || '场景分析中...';
-            
+        function displayPlan(data) {
+            sceneAnalysis.textContent = data.scene_analysis || '';
             poseGrid.innerHTML = '';
-            
-            if (data.pose_variants && data.pose_variants.length > 0) {
-                data.pose_variants.forEach(pose => {
+            const gender = genderSelect.value;
+            const sceneContext = data.scene_analysis || '';
+            if (data.poses && data.poses.length > 0) {
+                data.poses.forEach((pose, idx) => {
+                    const index = idx + 1;
                     const poseCard = document.createElement('div');
                     poseCard.className = 'pose-card';
-
                     const img = document.createElement('img');
-                    img.src = `/results/${pose.image}`;
                     img.className = 'pose-image';
                     img.alt = pose.name || 'pose';
-
+                    img.id = `pose-image-${index}`;
                     const info = document.createElement('div');
                     info.className = 'pose-info';
-
                     if (pose.category) {
                         const badge = document.createElement('span');
                         badge.style.display = 'inline-block';
@@ -957,49 +954,83 @@
                         badge.textContent = pose.category;
                         info.appendChild(badge);
                     }
-
                     const nameDiv = document.createElement('div');
                     nameDiv.className = 'pose-name';
                     nameDiv.textContent = pose.name || '';
-
                     const descDiv = document.createElement('div');
                     descDiv.className = 'pose-desc';
                     descDiv.textContent = pose.description || '';
-
                     const actions = document.createElement('div');
                     actions.className = 'pose-actions';
-
                     const btn = document.createElement('button');
                     btn.className = 'download-btn';
-                    btn.addEventListener('click', () => downloadPoseImage(pose.image, pose.name));
+                    btn.id = `download-btn-${index}`;
+                    btn.disabled = true;
                     const icon = document.createElement('span');
                     icon.className = 'download-icon';
                     icon.textContent = '⬇';
                     const label = document.createElement('span');
-                    label.textContent = '下载图片';
+                    label.textContent = '生成中';
                     btn.appendChild(icon);
                     btn.appendChild(label);
-
                     actions.appendChild(btn);
                     info.appendChild(nameDiv);
                     info.appendChild(descDiv);
                     info.appendChild(actions);
-
                     poseCard.appendChild(img);
                     poseCard.appendChild(info);
                     poseGrid.appendChild(poseCard);
+                    generateSinglePose(sceneContext, pose, index);
                 });
-
                 resultsSection.classList.add('active');
-                // Show regenerate button
                 regenerateBtn.style.display = 'inline-block';
-                // Scroll to top of results (not the section itself)
                 setTimeout(() => {
                     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                 }, 100);
                 hideError();
             } else {
                 showError('未能生成姿势，请重试');
+            }
+        }
+
+        async function generateSinglePose(sceneContext, pose, index) {
+            try {
+                const response = await fetch('/api/generate-pose-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image_filename: uploadedFilename,
+                        gender: genderSelect.value,
+                        pose_description: pose.description,
+                        scene_context: sceneContext,
+                        index: index
+                    })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    const imgEl = document.getElementById(`pose-image-${index}`);
+                    if (imgEl) imgEl.src = `/results/${data.image}`;
+                    const btnEl = document.getElementById(`download-btn-${index}`);
+                    if (btnEl) {
+                        btnEl.disabled = false;
+                        btnEl.onclick = () => downloadPoseImage(data.image, pose.name);
+                        const label = btnEl.querySelector('span:last-child');
+                        if (label) label.textContent = '下载图片';
+                    }
+                } else {
+                    const btnEl = document.getElementById(`download-btn-${index}`);
+                    if (btnEl) {
+                        const label = btnEl.querySelector('span:last-child');
+                        if (label) label.textContent = '生成失败';
+                    }
+                }
+            } catch (error) {
+                const btnEl = document.getElementById(`download-btn-${index}`);
+                if (btnEl) {
+                    const label = btnEl.querySelector('span:last-child');
+                    if (label) label.textContent = '网络错误';
+                }
+                console.error(error);
             }
         }
 
